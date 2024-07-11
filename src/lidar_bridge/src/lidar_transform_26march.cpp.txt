@@ -1,0 +1,48 @@
+#include "rclcpp/rclcpp.hpp"
+#include "sensor_msgs/msg/laser_scan.hpp"
+#include "px4_msgs/msg/obstacle_distance.hpp"
+
+class LidarTransformNode : public rclcpp::Node
+{
+public:
+    LidarTransformNode()
+    : Node("lidar_transform_node")
+    {
+        auto qos = rclcpp::QoS(10);  // History depth is 10
+        qos.reliability(rclcpp::ReliabilityPolicy::BestEffort);
+        obstacle_distance_publisher_ = this->create_publisher<px4_msgs::msg::ObstacleDistance>("/fmu/in/obstacle_distance", qos);
+        laser_scan_subscription_ = this->create_subscription<sensor_msgs::msg::LaserScan>(
+            "/scan", qos, std::bind(&LidarTransformNode::laserScanCallback, this, std::placeholders::_1));
+    }
+
+private:
+    void laserScanCallback(const sensor_msgs::msg::LaserScan::SharedPtr msg)
+    {
+        px4_msgs::msg::ObstacleDistance obstacle_msg;
+
+        // Populate ObstacleDistance message
+        obstacle_msg.timestamp = msg->header.stamp.sec * 1e6 + msg->header.stamp.nanosec / 1e3;  // Convert to microseconds
+        obstacle_msg.increment = msg->angle_increment;
+        obstacle_msg.min_distance = 0.02 * 1e2;  // Convert to centimeters
+        obstacle_msg.max_distance = 12 * 1e2;  // Convert to centimeters
+        obstacle_msg.angle_offset = 0.0;  // Assuming the lidar is mounted in the front
+        for (size_t i = 0; i < msg->ranges.size() && i < obstacle_msg.distances.size(); ++i)
+        {
+            obstacle_msg.distances[i] = std::min(std::max(static_cast<int>(msg->ranges[i] * 1e2), static_cast<int>(obstacle_msg.min_distance)), static_cast<int>(obstacle_msg.max_distance));  // Convert to centimeters
+        }
+
+        obstacle_distance_publisher_->publish(obstacle_msg);
+    }
+
+    rclcpp::Publisher<px4_msgs::msg::ObstacleDistance>::SharedPtr obstacle_distance_publisher_;
+    rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr laser_scan_subscription_;
+};
+
+int main(int argc, char * argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<LidarTransformNode>());
+    rclcpp::shutdown();
+    return 0;
+}
+
