@@ -1,0 +1,12 @@
+[submodule "src/isaac_ros_common"]
+	path = src/isaac_ros_common
+	url = https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_common
+[submodule "src/isaac_ros_nitros"]
+	path = src/isaac_ros_nitros
+	url = https://github.com/NVIDIA-ISAAC-ROS/isaac_ros_nitros
+[submodule "src/px4_msgs"]
+	path = src/px4_msgs
+	url = https://github.com/PX4/px4_msgs.git
+[submodule "src/px4_ros_com"]
+	path = src/px4_ros_com
+	url = https://github.com/PX4/px4_ros_com.git
