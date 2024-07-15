@@ -1,0 +1,5 @@
+<launch>
+  <include file="$(find-pkg-share isaac_ros_visual_slam)/launch/isaac_ros_visual_slam_realsense.launch.py" />
+  <include file="$(find-pkg-share px4_vslam)/launch/vslam_realsense.launch.py" />
+</launch>
+
